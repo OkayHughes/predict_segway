@@ -1,4 +1,3 @@
-string agent_name
 float64 time
 float32[] xs
 float32[] ys

@@ -55,6 +55,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    Frame.msg
    Observation.msg
+   FrameArray.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -207,7 +208,7 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-catkin_install_python(PROGRAMS bin/linear_predictor.py
-                               bin/test_pub.py
-                               bin/test_list.py
+catkin_install_python(PROGRAMS bin/lin
+                               bin/test
+                               bin/pub
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

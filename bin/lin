@@ -1,0 +1,72 @@
+#! /usr/bin/env python
+
+import rospy
+from pedes_predict.msg import Frame, FrameArray, Observation
+from geometry_msgs.msg import Point, Pose2D
+from predict.code.generate_distributions import linear_generator
+import numpy as np
+from multiprocessing import Process, Queue
+import time
+from itertools import izip
+
+
+
+
+
+
+def listener():
+    pub = rospy.Publisher('forecast/intermediary', FrameArray, queue_size = 10)
+    rospy.loginfo("Started publisher")
+    def callback(data):
+
+        t_final = 300
+        n_steps = 50
+        width = 3.0
+
+        gens = []
+        for datum in data.poses:
+            x = np.array([datum.x, datum.y])
+            v = np.array([np.cos(datum.theta)/200, np.sin(datum.theta)/200])
+
+            mag = np.sqrt(v[0]**2 + v[1] ** 2)
+
+            gens.append(linear_generator(x, v, t_final, n_steps, width))
+
+        for preds in izip(*gens):
+            data.time += (1.0/n_steps) * (t_final / 30.0)
+            frames = []
+            for pred in preds:
+                fr = Frame()
+                fr.time = data.time
+                arr = pred[0].astype(float).tolist()
+                fr.xs = arr[0]
+                fr.ys = arr[1]
+                fr.weights = pred[1].astype(float).tolist()
+                frames.append(fr)
+            pub.publish(frames)
+            rospy.loginfo("Frame {}".format(data.time))
+
+    # In ROS, nodes are uniquely named. If two nodes with the same
+    # node are launched, the previous one is kicked off. The
+    # anonymous=True flag means that rospy will choose a unique
+    # name for our 'listener' node so that multiple listeners can
+    # run simultaneously.
+    rospy.init_node('forecast_read', anonymous=True)
+    rospy.Subscriber("forecast/input", Observation, callback)
+    rospy.loginfo("Started Listener")
+    # spin() simply keeps python from exiting until this node is stopped
+    rospy.spin()
+
+if __name__ == '__main__':
+    try:
+        #x = np.array([0,0])
+        #v = np.array([-1, 0])
+        #t = 300
+        #N_steps = 50
+        #gen = linear_generator(x, v, t, N_steps, 3)
+        #for x in gen:
+        #    print x[0].shape
+        #    print x[1].shape
+        listener()
+    except rospy.ROSInterruptException:
+        pass

@@ -7,16 +7,18 @@ import time
 from numpy.random import uniform
 from numpy import pi
 
-def new_rand(name):
+def new_rand():
     obs = Observation()
-    prt = time.time()
     state = Pose2D()
     state.x = uniform(-1, 1)
     state.y = uniform(-1, 1)
     state.theta = uniform(0, 2 * pi)
-    obs.pose = state
+    state1 = Pose2D()
+    state1.x = uniform(-1, 1)
+    state1.y = uniform(-1, 1)
+    state1.theta = uniform(0, 2 * pi)
+    obs.poses = [state, state1]
     obs.time = rospy.get_time()
-    obs.agent_name = name
     return obs
 
 def talker():
@@ -26,13 +28,13 @@ def talker():
     prt = time.time()
     rospy.loginfo("Started Publisher")
     while not rospy.is_shutdown():
-        if time.time() - prt < .2:
+        if time.time() - prt < 3:
             rate.sleep()
             continue
         
         rospy.loginfo("Published")
-        pub.publish(new_rand("0"))
-        pub.publish(new_rand("1"))
+        pub.publish(new_rand())
+        prt = time.time()
         rate.sleep()
 
 if __name__ == '__main__':

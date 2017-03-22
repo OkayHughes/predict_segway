@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+import rospy
+from pedes_predict.msg import Frame, FrameArray
+import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointField
+from std_msgs.msg import Header
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from matplotlib import cm
+import numpy as np
+import time
+plt.ion()
+lst = []
+
+cmap = cm.viridis
+varidis = cmap(np.arange(cmap.N))
+varidis[:,-1] = np.linspace(0, 1, cmap.N)
+varidis = ListedColormap(varidis)
+
+width = 50
+x = PointField("x", 0, 7,1)
+y = PointField("y", 4, 7,1)
+z = PointField("z", 8, 7,1)
+i = PointField("i", 12, 7,1)
+fields = []
+
+def callback(frames):
+    frames = frames.frames
+    global lst
+    lst.append(frames)
+    lst = sorted(lst, key=lambda x: x[0].time)
+
+def display(pub):
+    global lst
+
+    if len(lst) == 0:
+        return
+
+    while lst[0][0].time < time.time():
+        lst.pop(0)
+        if len(lst) == 0:
+            return
+    pt = lst.pop(0)
+
+    sum = lambda x: reduce(lambda x, y: x + y, x)
+    xs = sum([f.xs for f in pt])
+    ys = sum([f.ys for f in pt])
+    weights = sum([f.weights for f in pt])
+
+    data = [[x, y, 0, w] for x, y, w in zip(xs, ys, weights)]
+
+    delay = 0.9 * (pt[0].time-time.time())
+
+    if delay >= 0:
+        time.sleep(delay)
+
+    header = Header()
+    hstamp = rospy.Time.now()
+
+    pub.publish(pc2.create_cloud(header, fields, data))
+    dt = time.time()
+
+def listener():
+    pub = rospy.Publisher('forecast/output', PointCloud2, queue_size= 10)
+    rospy.loginfo("Started Publisher")
+
+
+    # In ROS, nodes are uniquely named. If two nodes with the same
+    # node are launched, the previous one is kicked off. The
+    # anonymous=True flag means that rospy will choose a unique
+    # name for our 'listener' node so that multiple listeners can
+    # run simultaneously.
+
+    rospy.init_node('processor', anonymous=True)
+
+    rospy.Subscriber("forecast/intermediary", FrameArray, callback)
+    rospy.loginfo("Started Listener")
+    rate = rospy.Rate(300)
+    # spin() simply keeps python from exiting until this node is stopped
+    while not rospy.is_shutdown():
+        #for key in dat.keys():
+        #    litmus = sum([x == 0 for x in dat[key]])
+        #    print "Key {}: {}".format(key, litmus)
+        #    if litmus == 0:
+        #        display(key)
+        display(pub)
+
+if __name__ == '__main__':
+    listener()
