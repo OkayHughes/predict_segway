@@ -23,7 +23,7 @@ x = PointField("x", 0, 7,1)
 y = PointField("y", 4, 7,1)
 z = PointField("z", 8, 7,1)
 i = PointField("i", 12, 7,1)
-fields = []
+fields = [x,y,z,i]
 
 def callback(frames):
     frames = frames.frames
@@ -60,6 +60,7 @@ def display(pub):
 
     pub.publish(pc2.create_cloud(header, fields, data))
     dt = time.time()
+    rospy.loginfo(time.time()- pt[0].time)
 
 def listener():
     pub = rospy.Publisher('forecast/output', PointCloud2, queue_size= 10)
