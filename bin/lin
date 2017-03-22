@@ -12,12 +12,14 @@ from itertools import izip
 
 
 
-
-
+t = time.time()
 def listener():
     pub = rospy.Publisher('forecast/intermediary', FrameArray, queue_size = 10)
     rospy.loginfo("Started publisher")
     def callback(data):
+        global t
+        if time.time() - t < 3:
+            return
 
         t_final = 300
         n_steps = 50
