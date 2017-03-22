@@ -11,14 +11,15 @@ from itertools import izip
 
 
 
-
+gener = 0
 t = time.time()
 def listener():
     pub = rospy.Publisher('forecast/intermediary', FrameArray, queue_size = 10)
     rospy.loginfo("Started publisher")
+
     def callback(data):
-        global t
-        if time.time() - t < 3:
+        global t, generation
+        if time.time() - t < 1:
             return
 
         t_final = 300
@@ -45,8 +46,12 @@ def listener():
                 fr.ys = arr[1]
                 fr.weights = pred[1].astype(float).tolist()
                 frames.append(fr)
+            framearr = FrameArray()
+            framearr.frames = frames
+            framearr.generation = gener
             pub.publish(frames)
             rospy.loginfo("Frame {}".format(data.time))
+        gener += 1
 
     # In ROS, nodes are uniquely named. If two nodes with the same
     # node are launched, the previous one is kicked off. The
