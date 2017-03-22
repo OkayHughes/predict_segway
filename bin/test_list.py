@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import rospy
 from pedes_predict.msg import Frame
+import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs.msg import PointField
+from std_msgs import header
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib import cm
@@ -14,6 +17,8 @@ varidis = cmap(np.arange(cmap.N))
 varidis[:,-1] = np.linspace(0, 1, cmap.N)
 varidis = ListedColormap(varidis)
 
+width = 50
+
 def callback(frame):
     global dic
     name = frame.agent_name
@@ -24,7 +29,6 @@ def callback(frame):
     dic[name] = sorted(dic[name], key=lambda x: x.time)
     rospy.loginfo(len(dic[name]))
 
-plots = {}
 def display():
     global dic, plots
     reps = {}
@@ -41,21 +45,16 @@ def display():
                 
         reps[key] = dat.pop(0)
     
-    data = np.array(x.weights).reshape(50, 50)
+    data = np.array(x.weights).reshape(width, width)
     delay = 0.9 * (x.time-time.time())
+
     if delay >= 0:
         time.sleep(0.9 * (x.time-time.time()))
-    data = np.ma.masked_array(data, data < np.amax(data)/10)
-    mesh = plt.pcolormesh(data, cmap=varidis)
-    if x.agent_name in plots.keys():
-        plots[x.agent_name].remove()
-        plots[x.agent_name] = mesh
-    else:
-        plots[x.agent_name] = mesh
-    #plt.scatter(x.xs, x.ys, c=x.weights, cmap="viridis", edgecolors="none")
-    plt.pause(0.001)
-    #if ct > 1:
-    #    plt.clf()
+    #data = np.ma.masked_array(data, data < np.amax(data)/10)
+    
+
+
+    
     dt = time.time()
 
 def listener():
