@@ -13,10 +13,6 @@ import time
 plt.ion()
 lst = []
 
-cmap = cm.viridis
-varidis = cmap(np.arange(cmap.N))
-varidis[:,-1] = np.linspace(0, 1, cmap.N)
-varidis = ListedColormap(varidis)
 
 width = 50
 x = PointField("x", 0, 7,1)
@@ -56,7 +52,9 @@ def display(pub):
         time.sleep(delay)
 
     header = Header()
-    hstamp = rospy.Time.now()
+    header.stamp = rospy.Time.now()
+    header.frame_id = "/fotonic_link"
+
 
     pub.publish(pc2.create_cloud(header, fields, data))
     dt = time.time()
