@@ -41,6 +41,11 @@ def listener():
             for pred in preds:
                 fr = Frame()
                 fr.time = data.time
+                mx = np.amax(pred[1])
+                whr = np.where(pred[1] > .9 * mx)
+                pred[0] = pred[:, [whr]]
+                pred[1] = pred[1][whr]
+
                 arr = pred[0].astype(float).tolist()
                 fr.xs = arr[0]
                 fr.ys = arr[1]
