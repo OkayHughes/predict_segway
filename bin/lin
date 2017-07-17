@@ -19,17 +19,18 @@ def listener():
 
     def callback(data):
         global t, gener
-        if time.time() - t < .05:
-            gener += 1
+        if time.time() - t < .2:
+            #gener += 1
             return
         t = time.time()
 
-        t_final = 1000
+        t_final = 300
         n_steps = 50
         width = 8.0
 
         gens = []
-        for datum in data.poses[:1]:
+        for datum in data.poses:
+            rospy.loginfo("INFO")
             x = np.array([datum.x, datum.y])
             v = np.array([np.cos(datum.theta)/200, np.sin(datum.theta)/200])
 
@@ -39,9 +40,6 @@ def listener():
 
         for preds in izip(*gens):
             data.time += (1.0/n_steps) * (t_final / 30.0)
-            if time.time - data.time < 0:
-                gener += 1
-                return
             frames = []
             for pred in preds:
                 pred = list(pred)
@@ -51,7 +49,6 @@ def listener():
                 whr = np.where(pred[1] > .7 * maximum)[0]
                 pred[0] = pred[0][:, whr]
                 pred[1] = pred[1][whr]
-                rospy.loginfo(len(whr))
 
                 arr = pred[0].astype(float).tolist()
                 fr.xs = arr[0]
@@ -62,7 +59,7 @@ def listener():
             framearr.frames = frames
             framearr.generation = gener
             pub.publish(framearr)
-            rospy.loginfo("Frame {}".format(data.time))
+            #rospy.loginfo("Frame {}".format(data.time))
         gener += 1
 
     # In ROS, nodes are uniquely named. If two nodes with the same
