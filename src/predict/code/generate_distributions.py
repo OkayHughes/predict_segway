@@ -165,9 +165,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     pass
 
 def linear_generator(x_hat, v_hat, t_final, N_steps, width):
-    x_span = np.linspace( x_hat[0] -width/2, x_hat[0] + width/2, 50)
+    x_span = np.linspace( x_hat[0] -width/2, x_hat[0] + width/2, 100)
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( x_hat[1] -width/2, x_hat[1] + width/2, 50)
+    y_span = np.linspace( x_hat[1] -width/2, x_hat[1] + width/2, 100)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])

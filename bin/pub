@@ -10,53 +10,70 @@ from matplotlib.colors import ListedColormap
 from matplotlib import cm
 import numpy as np
 import time
+import struct
 plt.ion()
-lst = []
-gener = 0
+plst = []
+t = time.time()
+gener = -1
 
-width = 50
+width = 100
 x = PointField("x", 0, 7,1)
 y = PointField("y", 4, 7,1)
 z = PointField("z", 8, 7,1)
-i = PointField("i", 12, 7,1)
-fields = [x,y,z,i]
+r = PointField("r", 12, 7,1)
+g = PointField("g", 16, 7,1)
+b = PointField("b", 20, 7,1)
+a = PointField("a", 24, 7,1)
+fields = [x,y,z, r, g, b, a]
 
 def callback(frames):
-    global gener, lst
+    global gener, plst, t
     if frames.generation != gener:
-        lst = []
+        plst = []
+        t = time.time()
         gener = frames.generation
 
-    frames = frames.frames
-    lst.append(frames)
+    plst.append(frames)
 
 
 def display(pub):
 
-    global lst
+    global plst, t
+    if len(plst) == 0:
+        return
+
+    lst = [x.frames for x in plst]
 
     sum = lambda x: reduce(lambda x, y: x + y, x)
     pt = sum(lst)
     xs = sum([f.xs for f in pt])
     ys = sum([f.ys for f in pt])
-    weights = sum([f.weights for f in pt])
 
-    data = [[x, y, 0, w] for x, y, w in zip(xs, ys, weights)]
+    weights = sum([sum([[float(frame.time) for x in frame.weights] \
+                                          for frame in frames.frames]) \
+                                          for frames in plst]) 
+    if len(weights) == 0:
+        return
 
-    delay = 0.9 * (pt[0].time-time.time())
+    mx = max(weights)
+    mn = min(weights)
+    if mx-mn == 0:
+        return
+    weights = [1 -(weight - mn)/(mx-mn) for weight in weights]
 
-    if delay >= 0:
-        time.sleep(delay)
+    #print weights
+
+    vr = lambda x, w: cm.viridis(x)[w]
+    data = [[x, y, -1, vr(w, 0), vr(w, 1), vr(w, 2), .5] for x, y, w in zip(xs, ys, weights)]
 
     header = Header()
     header.stamp = rospy.Time.now()
     header.frame_id = "/fotonic_link"
 
-
-    pub.publish(pc2.create_cloud(header, fields, data))
-    dt = time.time()
-    rospy.loginfo(time.time()- pt[0].time)
-
+    rospy.loginfo("Time: {}".format(time.time() - t))
+    if time.time() - t < 1:
+        pub.publish(pc2.create_cloud(header, fields, data))
+        
 def listener():
     pub = rospy.Publisher('forecast/output', PointCloud2, queue_size= 10)
     rospy.loginfo("Started Publisher")
