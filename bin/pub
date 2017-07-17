@@ -47,6 +47,7 @@ def display(pub):
 
     if delay >= 0:
         time.sleep(delay)
+    
 
     header = Header()
     header.stamp = rospy.Time.now()
