@@ -62,9 +62,12 @@ def display(pub):
     weights = [1 -(weight - mn)/(mx-mn) for weight in weights]
 
     #print weights
-
+    
     vr = lambda x, w: cm.viridis(x)[w]
     data = [[x, y, -1, vr(w, 0), vr(w, 1), vr(w, 2), .5] for x, y, w in zip(xs, ys, weights)]
+
+    if delay >= 0:
+        time.sleep(delay)
 
     header = Header()
     header.stamp = rospy.Time.now()

@@ -20,6 +20,7 @@ def listener():
     def callback(data):
         global t, gener
         if time.time() - t < .05:
+            gener += 1
             return
         t = time.time()
 
@@ -28,7 +29,7 @@ def listener():
         width = 8.0
 
         gens = []
-        for datum in data.poses:
+        for datum in data.poses[:1]:
             x = np.array([datum.x, datum.y])
             v = np.array([np.cos(datum.theta)/200, np.sin(datum.theta)/200])
 
@@ -38,6 +39,9 @@ def listener():
 
         for preds in izip(*gens):
             data.time += (1.0/n_steps) * (t_final / 30.0)
+            if time.time - data.time < 0:
+                gener += 1
+                return
             frames = []
             for pred in preds:
                 pred = list(pred)
